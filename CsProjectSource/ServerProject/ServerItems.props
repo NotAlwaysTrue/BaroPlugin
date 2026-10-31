@@ -24,8 +24,9 @@
       <FilesToCopy Include="$(TargetDir)$(TargetName).pdb" />
     </ItemGroup>
 
-    <Copy SourceFiles="@(FilesToCopy)" DestinationFolder="$(ModDeployDir)\$(ModName)\$(PlatformName)\$(BuildTarget)" />
+    <Copy SourceFiles="@(FilesToCopy)" DestinationFolder="$(ModOutputDir)" />
   </Target>
 
+  <Import Project="..\ModFiles.props" />
   <Import Project="..\CopyOtherFiles.props" />
 </Project>

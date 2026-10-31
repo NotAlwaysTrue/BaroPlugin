@@ -46,13 +46,21 @@ Before opening the project, a few configuration steps are required.
 
 ### Required Configuration
 
-- Edit the file `BuildData.props` and replace `BaseMod` with your actual mod name.
-- Locate the file `UserBuildData.props.example` and create a copy named `UserBuildData.props`.
-  - Edit `UserBuildData.props`.
-  - Update the `ModDeployDir` value so it points to the **LocalMods** directory of your Barotrauma installation.
+This repository **is** the mod folder: Barotrauma loads it directly, so it has to sit inside `LocalMods`. If your copy lives somewhere else (for example `LocalMods/.Templates`), move or re-clone it to:
+
+```
+<Barotrauma Installation>\LocalMods\<YourModName>
+```
+
+Then edit the file `CsProjectSource/BuildData.props` and replace `BaseMod` with your actual mod name. Keep the folder name and `ModName` in sync so `%ModDir%` and the assembly paths stay consistent.
+
+Finally, copy `CsProjectSource/UserBuildData.props.example` to `CsProjectSource/UserBuildData.props` and set `BarotraumaExePath` to your own `Barotrauma.exe`. That file is ignored by git, so machine specific paths never end up in the repository.
+
+> The `Launch Barotrauma` profile in `CsProjectSource/PluginToolbox/Properties/launchSettings.json` launches `$(BarotraumaExePath)`. When `UserBuildData.props` is missing it falls back to `<repo>\..\..\Barotrauma.exe`, which assumes the repository sits directly in `LocalMods`.
+
 ## Opening the Project
 
-You can now open the solution file `WindowsSolution.sln` (or the appropriate solution for your platform).
+You can now open the solution file `CsProjectSource/WindowsSolution.sln` (or the appropriate solution for your platform, all of which live in `CsProjectSource`).
 
 > If the `.sln` file does not open, ensure that you have a compatible .NET IDE installed.
 
@@ -62,9 +70,13 @@ You may also rename existing `ExampleMod` namespaces in the code to whatever fit
 
 ## Project Structure
 
-- **Server-side code**: `ServerProject/ServerSource`
-- **Client-side code**: `ClientProject/ClientSource`
-- **Shared code** (used by both client and server): `SharedProject/SharedSource`
+All C# projects and the shared MSBuild configuration live in the `CsProjectSource` folder:
+
+- **Server-side code**: `CsProjectSource/ServerProject/ServerSource`
+- **Client-side code**: `CsProjectSource/ClientProject/ClientSource`
+- **Shared code** (used by both client and server): `CsProjectSource/SharedProject/SharedSource`
+- **Build tooling**: `CsProjectSource/PluginToolbox`
+
 
 Within the **SharedProject**, you can use the `CLIENT` and `SERVER` preprocessor symbols to conditionally compile code for the client or the server as needed.
 
@@ -80,15 +92,29 @@ DebugConsole.NewMessage("Hello from client");
 
 ### Content
 
-All mod content (XML files, sounds, textures, etc.) should be placed in:
+All mod content (XML files, sounds, textures, etc.) is recommended be placed in:
 
-- `ContentPackageBuilder/Content`
-
-> All files you put here will automatically be copied to your ModDeployDir, you can trigger this manually by right clicking the ContentPackageBuilder project and pressing build.
+- `Content`
 
 If you add new XML content, make sure to update the file list located at:
 
-- `ContentPackageBuilder/filelist.xml`
+- `filelist.xml`
+
+### Build Output
+
+Compiled assemblies are copied to:
+
+- `bin/<Platform>/<Client|Server>/<ModName><Client|Server>.dll`
+
+`PluginInfo.xml` is regenerated on every build from `ModName`, pointing at those assemblies with `%ModDir%` paths, so it never needs to be edited by hand:
+
+```xml
+<MainAssemblyInfo assemblypath="%ModDir%/bin/Windows/Client/BaseModClient.dll" platforms="Windows" targets="Client" />
+```
+
+> The `name` attribute of `filelist.xml` is kept in sync with `ModName`; everything else in that file is preserved.
+
+> If you rename `ModName` later, delete the `bin` folder once, otherwise the assemblies built under the old name stay behind.
 
 ## Testing Your Mod
 
@@ -96,7 +122,7 @@ If you add new XML content, make sure to update the file list located at:
 
 You can test your mod by pressing the "Launch Barotrauma" button on top, which will automatically launch Barotrauma with the debugger attached and your plugin built. 
 
-Building the plugin also automatically generates the mod in the `LocalMods` folder you configured earlier. You can then enable the mod in-game.
+Building the plugin writes the assemblies straight into `bin` inside this folder and updates `PluginInfo.xml` to match, so there is no separate deploy step - the mod can be enabled in-game right away.
 
 You can also manually right-click **WindowsClient** and **WindowsServer** in the solution view, then select **Build**, which does the same process as the above, without the launching Barotrauma part.
 
@@ -111,6 +137,10 @@ Change the launch option from **Launch Barotrauma** to **Build Release**:
 <img width="1920" height="1032" alt="image" src="https://github.com/user-attachments/assets/94c8e5f1-2438-4d81-97c7-2c4ca7fc1d39" />
 
 Now simply click **Build Release** and it should start building your plugin in release mode.
+
+## Before Release
+
+Before publishing, mark the `CsProjectSource` folder as hidden (Windows: right click → **Properties** → **Hidden**), so the project sources are not shipped together with the mod.
 
 ## Hot Reload
 

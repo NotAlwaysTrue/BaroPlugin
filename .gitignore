@@ -58,8 +58,8 @@ riderModule.iml
 /_ReSharper.Caches/
 ref/*
 !ref/readme.txt
-LocalMods
 Refs/*
 !Refs/readme.txt
 
+# Machine specific build settings (copy UserBuildData.props.example)
 UserBuildData.props

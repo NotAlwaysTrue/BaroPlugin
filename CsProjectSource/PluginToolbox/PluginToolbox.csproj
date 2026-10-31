@@ -35,6 +35,6 @@
     </ProjectReference>
   </ItemGroup>
 
-  <Import Project="../UserBuildData.props" />
+  <Import Project="..\BuildData.props" />
 
 </Project>
